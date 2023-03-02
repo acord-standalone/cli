@@ -105,7 +105,7 @@ export default async function buildPlugin(config = {}) {
     async write(outDir) {
       await bundle.write({
         ...outputOptions,
-        file: path.join(outDir, "extension.js")
+        file: path.join(outDir, "source.js")
       });
 
       await bundle.close();
@@ -133,7 +133,7 @@ export async function build() {
   if (config.readme) {
     await fs.copyFile(
       path.resolve(config.about.readme),
-      path.resolve(dir, "./extension.md")
+      path.resolve(dir, "./readme.md")
     )
     delete config.about.readme;
   }
@@ -150,7 +150,7 @@ export async function build() {
   }
 
   await fs.writeFile(
-    path.resolve(dir, "./extension.json"),
+    path.resolve(dir, "./manifest.json"),
     JSON.stringify(config, null, 2),
     "utf-8"
   );

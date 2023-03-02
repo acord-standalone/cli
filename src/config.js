@@ -5,7 +5,7 @@ import fs from "fs";
  */
 export function getDefaultConfig(type) {
   return {
-    index: type == "plugin" ? "./index.js" : "./styles.css",
+    index: type == "plugin" ? "./index.js" : "./style.css",
     type,
     out: {
       minify: true,
