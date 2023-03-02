@@ -12,9 +12,10 @@ import stuffs from "stuffs";
 import { getDefaultConfig, readConfig } from "./config.js";
 import crypto from "crypto";
 
-
 export default async function buildPlugin(config = {}) {
   config = stuffs.defaultify(config, getDefaultConfig(config?.type || "plugin"))
+  if (!["plugin", "theme"].includes(config.type)) throw new Error(`Invalid type given in Acord extension. Only "plugin" or "theme" are allowed!`);
+  if (config.type === "theme" && (!config.index.endsWith(".css") && !config.index.endsWith(".sass") && !config.index.endsWith(".scss"))) throw new Error(`Invalid index file given in Acord theme. Only .css, .sass, and .scss files are allowed!`);
 
   const rollupPlugins = [
     {
@@ -25,7 +26,7 @@ export default async function buildPlugin(config = {}) {
         if (id.endsWith(".css") || isSass) {
           const cssCode = isSass ? sass.compile(id).css : code;
 
-          const minifiedCSS = (
+          const minified = (
             await esbuild.transform(cssCode, {
               minify: true,
               loader: "css",
@@ -33,9 +34,12 @@ export default async function buildPlugin(config = {}) {
           ).code.trim();
 
           return {
-            code: `import { injectCSS } from "@acord/patcher";\n${config.index.toLowerCase().endsWith("css") ? `let unloadCSS;\nexport default { load() { unloadCSS = injectCSS(${JSON.stringify(minifiedCSS)}); }, unload() { unloadCSS(); } }` : `export default () => injectCSS(${JSON.stringify(minifiedCSS)})`};`,
             map: { mappings: "" },
-          };
+            code:
+              (config.index.endsWith(".css") || config.index.endsWith(".sass") || config.index.endsWith(".scss"))
+                ? `export default () => ${JSON.stringify(minified)}`
+                : `import { injectCSS } from "@acord/patcher";\nexport default () => injectCSS(${JSON.stringify(minified)});`
+          }
         }
 
         return null;

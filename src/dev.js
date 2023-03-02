@@ -40,13 +40,14 @@ async function findPort(start, increment) {
   }
 }
 
+let isBuilding = false;
 export async function dev() {
   let config = await readConfig(path.resolve("./acord.cfg"));
 
   const socketPort = await findPort(6463, 20);
 
   if (!socketPort) {
-    console.log("Unable to find a valid Acord instance! Trying again..");
+    console.log(`[${new Date().toLocaleTimeString()}] Unable to find a valid Acord instance! Trying again..`);
 
     await new Promise(r => setTimeout(r, 2500));
 
@@ -56,8 +57,6 @@ export async function dev() {
   let ws = new WebSocket(`ws://127.0.0.1:${socketPort}/acord`);
 
   let watcher = chokidar.watch("./", { ignored: config.out.directory });
-
-  let isBuilding = false;
 
   watcher.on("all", async () => {
     if (isBuilding) return;
@@ -84,7 +83,7 @@ export async function dev() {
   });
 
   ws.onclose = () => {
-    console.log("Websocket connection closed!");
+    console.log(`[${new Date().toLocaleTimeString()}] Websocket connection closed!`);
     watcher.close();
     ws.close();
     dev();
