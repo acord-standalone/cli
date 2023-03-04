@@ -1,4 +1,5 @@
 import fs from "fs/promises"
+import { existsSync } from "fs";
 import path from "path"
 import * as rollup from "rollup"
 import esbuildPlugin from "rollup-plugin-esbuild";
@@ -125,12 +126,14 @@ export async function build() {
 
   let dir = config.out.directory;
 
+  if (!existsSync(dir)) await fs.mkdir(dir, { recursive: true });
+
   delete config.index;
   delete config.out;
 
   config.readme = !!config?.about?.readme;
 
-  if (config.readme) {
+  if (config.readme && existsSync(config.about.readme)) {
     await fs.copyFile(
       path.resolve(config.about.readme),
       path.resolve(dir, "./readme.md")
@@ -143,7 +146,7 @@ export async function build() {
   config = {
     hash: crypto.createHash("sha256")
       .update(
-        `${await fs.readFile(path.resolve(dir, "./extension.js"), "utf-8")}-${JSON.stringify(config)}`,
+        `${await fs.readFile(path.resolve(dir, "./source.js"), "utf-8")}-${JSON.stringify(config)}`,
         "utf-8"
       ).digest("hex"),
     ...config

@@ -5,7 +5,7 @@ import fs from "fs";
  */
 export function getDefaultConfig(type) {
   return {
-    index: type == "plugin" ? "./index.js" : "./style.css",
+    index: type == "plugin" ? "./src/index.js" : "./src/style.css",
     type,
     out: {
       minify: true,
@@ -35,7 +35,57 @@ export function getDefaultConfig(type) {
           image: "https://example.com/preview.png"
         }
       ]
-    }
+    },
+    ...(type == "plugin" ? {
+      api: {
+        i18n: true,
+        patcher: true,
+        events: true,
+        storage: true,
+        websocket: true,
+        ui: true,
+        utils: true,
+        dom: true,
+        dev: true,
+        modules: {
+          node: [
+            { name: "fs", reason: "Something meaningful.." },
+          ],
+          common: [
+            { name: "UserStore", reason: "Something meaningful.." },
+          ],
+          custom: [
+            {
+              name: "Rest",
+              lazy: false,
+              reason: "Something meaningful..",
+              filter: {
+                "path": {
+                  "after": [
+                    "exports.Z",
+                    "exports.ZP",
+                    "exports.default",
+                    "exports"
+                  ]
+                },
+                "filter": {
+                  "in": "properties",
+                  "by": [
+                    [
+                      "get",
+                      "post",
+                      "getAPIBaseURL"
+                    ]
+                  ]
+                }
+              },
+            }
+          ]
+        }
+      }
+    } : {}),
+    mode: "development",
+    config: []
   }
 }
 

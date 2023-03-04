@@ -64,7 +64,7 @@ export async function dev() {
 
     try {
       let { config: manifest } = await build();
-      let source = await fs.promises.readFile(path.resolve(config.out.directory, "./extension.js"), "utf-8");
+      let source = await fs.promises.readFile(path.resolve(config.out.directory, "./source.js"), "utf-8");
 
       ws.send(JSON.stringify(
         [
@@ -82,10 +82,14 @@ export async function dev() {
     isBuilding = false;
   });
 
-  ws.onclose = () => {
+  let closed = false;
+  ws.onclose = async () => {
+    if (closed) return;
+    closed = true;
     console.log(`[${new Date().toLocaleTimeString()}] Websocket connection closed!`);
     watcher.close();
     ws.close();
+    await new Promise(r => setTimeout(r, 2500));
     dev();
   }
 

@@ -18,7 +18,7 @@
   "type": "module",
   "name": "acord-cli",
   "bin": "./src/index.js",
-  "version": "0.1.1",
+  "version": "0.1.8",
   "author": {
     "name": "Kıraç Armağan Önal",
     "email": "kiracarmaganonal@gmail.com"

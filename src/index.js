@@ -71,6 +71,7 @@ const commands = [
       let config = getDefaultConfig(type);
       let text = JSON.stringify(config, null, 2);
       await fs.promises.writeFile(path.resolve("./acord.cfg"), text);
+      await fs.promises.writeFile(path.resolve("./readme.md"), "# Acord extension");
 
       console.log(chalk.blackBright(text));
       console.log(`[${new Date().toLocaleTimeString()}] Acord project initialized!`)
