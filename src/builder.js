@@ -87,8 +87,8 @@ export default async function buildPlugin(config = {}) {
     globals(id) {
       if (id.startsWith("@acord")) return `$${id.slice(1).replace(/\//g, ".")}`;
       const map = {
-        react: "acord.modules.common.React",
-        "react-dom": "acord.modules.common.ReactDOM",
+        "react": "$acord.modules.common.React",
+        "react-dom": "$acord.modules.common.ReactDOM",
       };
       return map[id] || null;
     },
