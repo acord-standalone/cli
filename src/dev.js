@@ -1,4 +1,3 @@
-import WebSocket from "ws";
 import path from "path";
 import fs from "fs";
 import chokidar from "chokidar";
@@ -13,17 +12,13 @@ async function findPort(start, increment) {
     port += 1;
 
     let val = await new Promise((resolve) => {
-      let socket = new WebSocket(`ws://127.0.0.1:${port}/acord`);
-      socket.on("open", () => {
-        socket.close();
-        resolve(port);
-      });
-
-      socket.on("error", () => {
-        resolve(false);
-      });
-
-      socket.on("close", () => {
+      fetch(`http://localhost:${port}/ping`).then((d) => {
+        if (d.status === 200) {
+          resolve(port);
+        } else {
+          resolve(false);
+        }
+      }).catch(() => {
         resolve(false);
       });
 
@@ -44,17 +39,15 @@ let isBuilding = false;
 export async function dev() {
   let config = await readConfig(path.resolve("./acord.cfg"));
 
-  const socketPort = await findPort(6463, 20);
+  const port = await findPort(6160, 10);
 
-  if (!socketPort) {
+  if (!port) {
     console.log(`[${new Date().toLocaleTimeString()}] Unable to find a valid Acord instance! Trying again..`);
 
     await new Promise(r => setTimeout(r, 2500));
 
     return dev();
   }
-
-  let ws = new WebSocket(`ws://127.0.0.1:${socketPort}/acord`);
 
   let watcher = chokidar.watch("./", { ignored: config.out.directory });
 
@@ -66,31 +59,31 @@ export async function dev() {
       let { config: manifest } = await build();
       let source = await fs.promises.readFile(path.resolve(config.out.directory, "./source.js"), "utf-8");
 
-      ws.send(JSON.stringify(
-        [
-          crypto.randomUUID(),
-          "UpdateDevelopmentExtension",
-          { source, manifest }
-        ]
-      ));
-
-      console.log(`[${new Date().toLocaleTimeString()}] Extension sent to Acord instance! (${getLocalized(manifest.about.name)})`);
+      fetch(
+        `http://localhost:${port}/handler`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: "UpdateDevelopmentExtension",
+            data: { source, manifest }
+          })
+        })
+        .then((d) => {
+          console.log(`[${new Date().toLocaleTimeString()}] Extension sent to Acord instance! (${getLocalized(manifest.about.name)})`);
+        })
+        .catch(() => {
+          console.log(`[${new Date().toLocaleTimeString()}] Connection closed!`);
+          watcher.close();
+          setTimeout(dev, 2500);
+        });
     } catch (err) {
       console.log(`[${new Date().toLocaleTimeString()}] Unable to build Acord extension!`, err);
     };
 
     isBuilding = false;
   });
-
-  let closed = false;
-  ws.onclose = async () => {
-    if (closed) return;
-    closed = true;
-    console.log(`[${new Date().toLocaleTimeString()}] Websocket connection closed!`);
-    watcher.close();
-    ws.close();
-    await new Promise(r => setTimeout(r, 2500));
-    dev();
-  }
 
 }
