@@ -12,6 +12,7 @@ import sass from "sass";
 import stuffs from "stuffs";
 import { getDefaultConfig, readConfig } from "./config.js";
 import crypto from "crypto";
+import htmlMinifier from 'html-minifier-terser';
 
 export default async function buildPlugin(config = {}) {
   config = stuffs.defaultify(config, getDefaultConfig(config?.type || "plugin"))
@@ -35,11 +36,36 @@ export default async function buildPlugin(config = {}) {
           ).code.trim();
 
           return {
-            map: { mappings: "" },
+            map: { mappings: '' },
             code:
               (config.index.endsWith(".css") || config.index.endsWith(".sass") || config.index.endsWith(".scss"))
                 ? `export default () => ${JSON.stringify(minified)}`
                 : `import { injectCSS } from "@acord/patcher";\nexport default () => injectCSS(${JSON.stringify(minified)});`
+          }
+        }
+
+        if (id.endsWith(".html") || id.endsWith(".htm")) {
+          let minified = (await htmlMinifier.minify(code, {
+            removeComments: true,
+            removeCommentsFromCDATA: true,
+            removeCDATASectionsFromCDATA: true,
+            collapseWhitespace: true,
+            collapseBooleanAttributes: true,
+            removeAttributeQuotes: false,
+            removeRedundantAttributes: false,
+            useShortDoctype: true,
+            removeEmptyAttributes: false,
+            removeEmptyElements: false,
+            removeOptionalTags: false,
+            removeScriptTypeAttributes: true,
+            removeStyleLinkTypeAttributes: true,
+            minifyJS: true,
+            minifyCSS: true
+          })).replace(/\n ( |\n)*/g, " ");
+
+          return {
+            map: { mappings: '' },
+            code: `import dom from "@acord/dom"; export default () => dom.parse(${JSON.stringify(minified)})`,
           }
         }
 

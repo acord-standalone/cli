@@ -7,6 +7,7 @@
     "chalk": "5.0.1",
     "chokidar": "^3.5.3",
     "esbuild": "0.14.53",
+    "html-minifier-terser": "^7.2.0",
     "plsargs": "0.1.6",
     "rollup": "2.77.2",
     "rollup-plugin-esbuild": "4.9.1",
@@ -16,7 +17,7 @@
   "type": "module",
   "name": "acord-cli",
   "bin": "./src/index.js",
-  "version": "0.1.10",
+  "version": "0.1.13",
   "author": {
     "name": "Kıraç Armağan Önal",
     "email": "kiracarmaganonal@gmail.com"
